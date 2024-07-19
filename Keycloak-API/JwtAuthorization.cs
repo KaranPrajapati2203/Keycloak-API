@@ -56,7 +56,7 @@ namespace Keycloak_API
             }
         }
 
-        public async Task<string> keycloakAuth(UserModel user)
+        public async Task<HttpResponseMessage> keycloakAuth(UserModel user)
         {
             string baseUrl = "http://localhost:8080/realms/my-realm/protocol/openid-connect/token";
             //string baseUrl = "http://localhost:8080/realms/my-realm/account/";
@@ -64,19 +64,20 @@ namespace Keycloak_API
             {
                 //{ "client_id", "admin-cli" },
                 { "client_id", "myclient" },
-                { "password", user.user_password },
+                { "client_secret", "GdcXJUVQ4g0q8P6eanmMVWxOWZfRPaFO" },
                 { "grant_type", "password" },
-                { "email", user.user_email }
-                //{ "username", user.user_name }
+                { "username", user.user_name },
+                { "password", user.user_password }
+                //{ "email", user.user_email },
             };
             var content = new FormUrlEncodedContent(values);
-            Console.WriteLine("content: "+ content);
+            //Console.WriteLine("content: " + content);
             var response = await client.PostAsync(baseUrl, content);
-            Console.WriteLine("response: "+response);
-            var responsestring = await response.Content.ReadAsStringAsync();
-            Console.WriteLine("responsestring: " + responsestring);
+            Console.WriteLine("response: " + response);
+            //var responsestring = await response.Content.ReadAsStringAsync();
+            //Console.WriteLine("responsestring: " + responsestring);
             //return responsestring;
-            return await response.Content.ReadAsStringAsync();
+            return response;
         }
 
         public async Task<Dictionary<string, object>> adminLogin()
@@ -100,7 +101,7 @@ namespace Keycloak_API
             return jsonResponse;
         }
 
-        public async Task<Dictionary<string, object>> createKeyCloakUser(string adminToken, UserModel userModel)
+        public async Task<HttpResponseMessage> createKeyCloakUser(string adminToken, UserModel userModel)
         {
             var contentType = new MediaTypeWithQualityHeaderValue("application/json");
             string baseUrl = "http://localhost:8080/admin/realms/my-realm/users";
@@ -132,10 +133,10 @@ namespace Keycloak_API
 
             var response = await client.PostAsync(baseUrl, contentData);
             Console.WriteLine("response: " + response);
-            var responsestring = await response.Content.ReadAsStringAsync();
+            //var responsestring = await response.Content.ReadAsStringAsync();
 
-            var jsonResponse = JsonConvert.DeserializeObject<Dictionary<string, object>>(responsestring);
-            return jsonResponse;
+            //var jsonResponse = JsonConvert.DeserializeObject<Dictionary<string, object>>(responsestring);
+            return response;
         }
 
     }

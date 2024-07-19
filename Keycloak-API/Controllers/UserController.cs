@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using Npgsql;
+using System.Net;
 
 namespace Keycloak_API.Controllers
 {
@@ -29,10 +31,11 @@ namespace Keycloak_API.Controllers
             var adminToken = await _jwt.adminLogin();
             string token = Convert.ToString(adminToken["access_token"]);
             var createUserKeyCloak = await _jwt.createKeyCloakUser(token, userModel);
-            /* if (createUserKeyCloak == null)
-             {
-                 return BadRequest(new { message = "Error creating user in Keycloak." });
-             }*/
+            if (createUserKeyCloak.StatusCode != HttpStatusCode.Created)
+            {
+                var keycloakError = await createUserKeyCloak.Content.ReadAsStringAsync();
+                return BadRequest(new { message = "Error creating user in Keycloak.", error = keycloakError });
+            }
 
             // Register user in PostgreSQL
             int userId = 0;
@@ -106,14 +109,25 @@ namespace Keycloak_API.Controllers
 
             // Authenticate user with Keycloak
             var keycloakResponse = await _jwt.keycloakAuth(userModel);
-            if (keycloakResponse.Contains("access_token"))
+            if (keycloakResponse.StatusCode == HttpStatusCode.OK)
             {
-                var token = _jwt.GenerateToken(user);
-                return Ok(new { token });
+                var keycloakContent = await keycloakResponse.Content.ReadAsStringAsync();
+                var keycloakData = JsonConvert.DeserializeObject<Dictionary<string, object>>(keycloakContent);
+
+                if (keycloakData.ContainsKey("access_token"))
+                {
+                    var token = _jwt.GenerateToken(user);
+                    return Ok(new { token });
+                }
+                else
+                {
+                    return Unauthorized(new { message = "Invalid credentials." });
+                }
             }
             else
             {
-                return Unauthorized(new { message = "Invalid credentials." });
+                var keycloakError = await keycloakResponse.Content.ReadAsStringAsync();
+                return Unauthorized(new { message = "Keycloak authentication failed.", error = keycloakError });
             }
         }
 

@@ -40,3 +40,4 @@ C:\Users\KARAN\Desktop\Keycloak Demo\Keycloak-API\Keycloak-API\obj\Debug\net8.0\
 C:\Users\KARAN\Desktop\Keycloak Demo\Keycloak-API\Keycloak-API\obj\Debug\net8.0\Keycloak-API.pdb
 C:\Users\KARAN\Desktop\Keycloak Demo\Keycloak-API\Keycloak-API\obj\Debug\net8.0\Keycloak-API.genruntimeconfig.cache
 C:\Users\KARAN\Desktop\Keycloak Demo\Keycloak-API\Keycloak-API\obj\Debug\net8.0\ref\Keycloak-API.dll
+C:\Users\KARAN\Desktop\Keycloak Demo\Keycloak-API\Keycloak-API\obj\Debug\net8.0\Keycloak-API.sourcelink.json
