@@ -18,20 +18,58 @@ namespace Keycloak_API
             _configuration = configuration;
             _httpContextAccessor = httpContextAccessor;
         }
+        #region GenerateToken
+        //public string GenerateToken(UserModel user)
+        //{
+        //    var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+        //    var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+        //    var claims = new[]
+        //    {
+        //        new Claim("user_id", user.user_id.ToString()),
+        //    };
+
+        //    var token = new JwtSecurityToken(_configuration["Jwt:Issuer"], _configuration["Jwt:Audience"], claims, expires: DateTime.Now.AddMinutes(5), signingCredentials: credentials);
+        //    return new JwtSecurityTokenHandler().WriteToken(token);
+        //}
 
         public string GenerateToken(UserModel user)
         {
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
-            var claims = new[]
+
+            var claims = new List<Claim>
             {
-                new Claim("user_id", user.user_id.ToString()),
+                new Claim(JwtRegisteredClaimNames.Sub, user.user_id.ToString()),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()), // Unique identifier for the token
+                new Claim(JwtRegisteredClaimNames.Iat, DateTime.UtcNow.ToString(), ClaimValueTypes.Integer64), // Issued at
+                new Claim(JwtRegisteredClaimNames.Email, user.user_email),
+                new Claim("user_name", user.user_name),
+                new Claim(ClaimTypes.NameIdentifier, user.user_id.ToString())
             };
 
-            var token = new JwtSecurityToken(_configuration["Jwt:Issuer"], _configuration["Jwt:Audience"], claims, expires: DateTime.Now.AddMinutes(5), signingCredentials: credentials);
-            return new JwtSecurityTokenHandler().WriteToken(token);
+            // Assuming user roles are stored in a list within the UserModel
+            //foreach (var role in user.Roles)
+            //{
+            //    claims.Add(new Claim(ClaimTypes.Role, role));
+            //}
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.UtcNow.AddMinutes(30), // Token expiration time
+                NotBefore = DateTime.UtcNow, // Token not valid before this time
+                Issuer = _configuration["Jwt:Issuer"],
+                Audience = _configuration["Jwt:Audience"],
+                SigningCredentials = credentials
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+
+            return tokenHandler.WriteToken(token);
         }
 
+        #endregion
         public JwtSecurityToken ValidateToken(IHeaderDictionary headers)
         {
             try

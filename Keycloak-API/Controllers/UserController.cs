@@ -29,6 +29,7 @@ namespace Keycloak_API.Controllers
         {
             // Register user in Keycloak
             var adminToken = await _jwt.adminLogin();
+            Console.WriteLine("adminToken: " + adminToken);
             string token = Convert.ToString(adminToken["access_token"]);
             var createUserKeyCloak = await _jwt.createKeyCloakUser(token, userModel);
             if (createUserKeyCloak.StatusCode != HttpStatusCode.Created)
@@ -112,8 +113,9 @@ namespace Keycloak_API.Controllers
             if (keycloakResponse.StatusCode == HttpStatusCode.OK)
             {
                 var keycloakContent = await keycloakResponse.Content.ReadAsStringAsync();
+                Console.WriteLine("keycloakContent: " + keycloakContent);
                 var keycloakData = JsonConvert.DeserializeObject<Dictionary<string, object>>(keycloakContent);
-
+                Console.WriteLine("keycloakData: " + keycloakData);
                 if (keycloakData.ContainsKey("access_token"))
                 {
                     var token = _jwt.GenerateToken(user);
